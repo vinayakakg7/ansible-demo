@@ -1,0 +1,48 @@
+---
+- name: Deploy Java jar file to Tomcat
+  hosts: tomcat-server
+  vars:
+    app_name: springbootApp
+    jar_file: springbootApp.jar
+    tomcat_home: /opt/tomcat
+    backup_dir: /opt/backups
+  tasks:
+    - name: Create backup directory if it doesn't exist
+      file:
+        path: "{{ backup_dir }}"
+        state: directory
+      become: true
+
+    - name: Backup existing jar file
+      command: "cp {{ tomcat_home }}/webapps/{{ app_name }}.jar {{ backup_dir }}/{{ app_name }}_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.jar"
+      args:
+        creates: "{{ backup_dir }}/{{ app_name }}_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.jar"
+      become: true
+      register: backup_result
+      changed_when: backup_result.rc == 0
+
+    - name: Stop Tomcat
+      systemd:
+        name: tomcat
+        state: stopped
+      become: true
+
+    - name: Remove existing jar file
+      file:
+        path: "{{ tomcat_home }}/webapps/{{ app_name }}.jar"
+        state: absent
+      become: true
+
+    - name: Copy jar file to Tomcat
+      copy:
+        src: "{{ jar_file }}"
+        dest: "{{ tomcat_home }}/webapps/{{ app_name }}.jar"
+      become: true
+      register: copy_result
+      changed_when: copy_result.changed
+
+    - name: Start Tomcat
+      systemd:
+        name: tomcat
+        state: started
+      become: true
