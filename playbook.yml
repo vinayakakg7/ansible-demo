@@ -1,6 +1,6 @@
 ---
 - name: Deploy Java jar file to Tomcat
-  hosts: tomcat-server
+  hosts: 15.206.84.19
   vars:
     app_name: springbootApp
     jar_file: springbootApp.jar
