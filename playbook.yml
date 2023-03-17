@@ -12,29 +12,33 @@
         path: "{{ backup_dir }}"
         state: directory
       become: true
-    - name: Check for existing jar file
+
+    - name: Check if jar file exists in Tomcat webapps directory
       stat:
         path: "{{ tomcat_home }}/webapps/{{ app_name }}.jar"
-      register: jar_file_status
-
-    - name: Backup existing jar file
-      command: "cp {{ tomcat_home }}/webapps/{{ app_name }}.jar {{ backup_dir }}/{{ app_name }}_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.jar"
-      args:
-        creates: "{{ backup_dir }}/{{ app_name }}_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.jar"
+      register: jar_file_exists
       become: true
+
+    - name: Backup existing jar file (if it exists)
+      shell: |
+        if [ -e "{{ tomcat_home }}/webapps/{{ app_name }}.jar" ]
+        then
+          cp -p "{{ tomcat_home }}/webapps/{{ app_name }}.jar" "{{ backup_dir }}/{{ app_name }}_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.jar"
+        fi
       register: backup_result
-      changed_when: backup_result.rc == 0 and and jar_file_status.stat.exists
+      changed_when: backup_result.stdout != ''
+      become: true
 
     - name: Stop Tomcat
       command: "tomcatdown"
       become: true
 
-    - name: Remove existing jar file
+    - name: Remove existing jar file (if it exists)
       file:
         path: "{{ tomcat_home }}/webapps/{{ app_name }}.jar"
         state: absent
       become: true
-      when: backup_result.stdout != ''
+      when: backup_result.stdout != '' and jar_file_exists.stat.exists
 
     - name: Copy jar file to Tomcat
       copy:
@@ -42,7 +46,6 @@
         dest: "{{ tomcat_home }}/webapps/{{ app_name }}.jar"
       become: true
       register: copy_result
-      changed_when: copy_result.changed
 
     - name: Start Tomcat
       command: "tomcatup"
