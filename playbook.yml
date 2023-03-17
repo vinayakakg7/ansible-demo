@@ -3,7 +3,7 @@
   hosts: localhost
   vars:
     app_name: springbootApp
-    jar_file: springbootApp.jar
+    jar_file: target/springbootApp.jar
     tomcat_home: /opt/tomcat
     backup_dir: /opt/backups
   tasks:
