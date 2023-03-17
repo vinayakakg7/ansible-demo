@@ -22,9 +22,7 @@
       changed_when: backup_result.rc == 0
 
     - name: Stop Tomcat
-      systemd:
-        name: tomcat
-        state: stopped
+      command: "tomcatdown"
       become: true
 
     - name: Remove existing jar file
@@ -42,7 +40,5 @@
       changed_when: copy_result.changed
 
     - name: Start Tomcat
-      systemd:
-        name: tomcat
-        state: started
+      command: "tomcatup"
       become: true
