@@ -3,7 +3,7 @@
   hosts: localhost
   vars:
     app_name: springbootApp
-    jar_file: target/springbootApp.jar
+    jar_file: target/springbootApp.war
     tomcat_home: /opt/tomcat
     backup_dir: /opt/backups
   tasks:
@@ -15,15 +15,15 @@
 
     - name: Check if jar file exists in Tomcat webapps directory
       stat:
-        path: "{{ tomcat_home }}/webapps/{{ app_name }}.jar"
+        path: "{{ tomcat_home }}/webapps/{{ app_name }}.war"
       register: jar_file_exists
       become: true
 
     - name: Backup existing jar file (if it exists)
       shell: |
-        if [ -e "{{ tomcat_home }}/webapps/{{ app_name }}.jar" ]
+        if [ -e "{{ tomcat_home }}/webapps/{{ app_name }}.war" ]
         then
-          cp -p "{{ tomcat_home }}/webapps/{{ app_name }}.jar" "{{ backup_dir }}/{{ app_name }}_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.jar"
+          cp -p "{{ tomcat_home }}/webapps/{{ app_name }}.war" "{{ backup_dir }}/{{ app_name }}_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.war"
         fi
       register: backup_result
       changed_when: backup_result.stdout != ''
@@ -35,7 +35,7 @@
 
     - name: Remove existing jar file (if it exists)
       file:
-        path: "{{ tomcat_home }}/webapps/{{ app_name }}.jar"
+        path: "{{ tomcat_home }}/webapps/{{ app_name }}.war"
         state: absent
       become: true
       when: backup_result.stdout != '' and jar_file_exists.stat.exists
@@ -43,7 +43,7 @@
     - name: Copy jar file to Tomcat
       copy:
         src: "{{ jar_file }}"
-        dest: "{{ tomcat_home }}/webapps/{{ app_name }}.jar"
+        dest: "{{ tomcat_home }}/webapps/{{ app_name }}.war"
       become: true
       register: copy_result
 
