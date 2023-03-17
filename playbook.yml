@@ -12,6 +12,10 @@
         path: "{{ backup_dir }}"
         state: directory
       become: true
+    - name: Check for existing jar file
+      stat:
+        path: "{{ tomcat_home }}/webapps/{{ app_name }}.jar"
+      register: jar_file_status
 
     - name: Backup existing jar file
       command: "cp {{ tomcat_home }}/webapps/{{ app_name }}.jar {{ backup_dir }}/{{ app_name }}_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.jar"
@@ -19,7 +23,7 @@
         creates: "{{ backup_dir }}/{{ app_name }}_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.jar"
       become: true
       register: backup_result
-      changed_when: backup_result.rc == 0 and backup_result.stdout != ''
+      changed_when: backup_result.rc == 0 and and jar_file_status.stat.exists
 
     - name: Stop Tomcat
       command: "tomcatdown"
