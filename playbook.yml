@@ -19,7 +19,7 @@
         creates: "{{ backup_dir }}/{{ app_name }}_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.jar"
       become: true
       register: backup_result
-      changed_when: backup_result.rc == 0
+      changed_when: backup_result.rc == 0 and backup_result.stdout != ''
 
     - name: Stop Tomcat
       command: "tomcatdown"
@@ -30,6 +30,7 @@
         path: "{{ tomcat_home }}/webapps/{{ app_name }}.jar"
         state: absent
       become: true
+      when: backup_result.stdout != ''
 
     - name: Copy jar file to Tomcat
       copy:
