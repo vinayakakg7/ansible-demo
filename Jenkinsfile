@@ -24,7 +24,7 @@ pipeline{
         }
     stage('Run Ansible Playbook') {
             steps {
-                sh 'ansible-playbook playbook.yml'
+                sh 'ansible-playbook playbook.yml --connection=local'
 			}
 		}
         
